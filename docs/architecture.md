@@ -1,21 +1,57 @@
 
 
+# Architecture Documentation
 
-# Architecture
+## Overview
 
-## Components
+The system is designed around a clear separation of responsibilities:
 
-- FastAPI: backend and source of truth
-- SQLite: persistence layer
-- n8n: workflow orchestration
-- AI endpoint: decision service (mock)
-- External API: simulated third-party integration
+- **FastAPI**: owns application state and persistence
+- **n8n**: orchestrates automation workflows
+- **AI service**: provides decision support
+- **External APIs**: simulate third-party integrations
 
-## Data Flow
+---
 
-1. Vendor sends webhook
-2. FastAPI stores ticket
+## Core Components
+
+### FastAPI Backend
+- Acts as the system’s source of truth
+- Stores tickets and related events
+- Exposes REST APIs for internal and external consumers
+
+### Database (SQLite)
+- Stores tickets (`Ticket`)
+- Stores webhook audit logs (`Event`)
+- Ensures persistence and traceability
+
+### n8n
+- Listens to backend-triggered webhooks
+- Executes conditional logic
+- Calls internal APIs to update state
+
+### AI Endpoint
+- Receives ticket content
+- Returns structured analysis
+- Enables automation decisions
+
+---
+
+## Data Flow (Detailed)
+
+1. A vendor system sends a webhook
+2. FastAPI validates and stores the ticket
 3. FastAPI triggers n8n
-4. n8n evaluates priority
-5. AI analyzes ticket content
-6. n8n updates ticket status if required
+4. n8n evaluates ticket priority
+5. AI endpoint analyzes ticket content
+6. n8n escalates ticket if required
+7. Ticket status is updated in the database
+
+---
+
+## Design Principles
+
+- **Single Source of Truth**: only FastAPI mutates data
+- **Loose Coupling**: n8n communicates via HTTP only
+- **Idempotency**: repeated vendor events do not corrupt data
+- **Extensibility**: components can be swapped independently
